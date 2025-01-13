@@ -1,7 +1,6 @@
 import os
 import torch
 from termcolor import cprint
-import yaml
 
 # Đặt seed toàn cục
 seed = 42

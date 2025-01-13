@@ -2,6 +2,11 @@ import torch
 import torch.nn.functional as F
 import pandas as pd
 
+# Đặt seed toàn cục
+seed = 42
+torch.manual_seed(seed)
+
+
 class IdFocalLoss(torch.nn.Module):
     
     def __init__(self, file_path, gamma_thresholds=((0.7, 2.0), (0.4, 1.0), (0.2, 0.25))):

@@ -142,5 +142,6 @@ def create_miresnet(model_name, **kwargs):
     block, layers = configs[model_name]
     return MIResNet(block, layers, **kwargs)
 
+
 if __name__ == '__main':
     backbone = create_miresnet('miresnet18', num_classes = 1000)

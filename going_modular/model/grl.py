@@ -3,6 +3,9 @@ import torch.nn as nn
 from torch.autograd import Function
 import torch
 
+# Đặt seed toàn cục
+seed = 42
+torch.manual_seed(seed)
 
 class GradientReverseFunction(Function):
 

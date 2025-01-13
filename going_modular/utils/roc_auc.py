@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from sklearn.metrics import roc_curve, auc, accuracy_score, roc_auc_score
+from sklearn.metrics import roc_auc_score
 
 # Đặt seed toàn cục
 seed = 42

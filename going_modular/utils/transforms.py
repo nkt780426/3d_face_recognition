@@ -43,7 +43,7 @@ class GaussianNoise(A.ImageOnlyTransform):
         return result
     
 class RandomResizedCropRect(A.ImageOnlyTransform):
-    def __init__(self, size, scale=(0.8, 1.0), p = 1.0):
+    def __init__(self, size, scale=(0.7, 1.0), p = 1.0):
         super().__init__(p)  # Khởi tạo base class với p là xác suất
         self.size = size
         self.scale = scale

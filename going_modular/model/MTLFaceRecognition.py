@@ -12,6 +12,9 @@ from .backbone.mifr import create_miresnet
 
 from .grl import GradientReverseLayer
 
+# Đặt seed toàn cục
+seed = 42
+torch.manual_seed(seed)
 
 class MTLFaceRecognition(torch.nn.Module):
 

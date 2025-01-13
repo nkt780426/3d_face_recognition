@@ -4,6 +4,10 @@ import torch.nn.functional as F
 from torch.nn import Parameter
 import math
 
+# Đặt seed toàn cục
+seed = 42
+torch.manual_seed(seed)
+
 # class MagLinear(torch.nn.Module):
 #     def __init__(self, in_features, out_features, easy_margin=True, l_margin=0.45, u_margin=0.8, l_a=10, u_a=110):
 #         super(MagLinear, self).__init__()
@@ -76,7 +80,6 @@ class IdRecognitionModule(nn.Module):
             nn.BatchNorm2d(512),
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(512, num_classes),
         )
 

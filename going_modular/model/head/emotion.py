@@ -1,4 +1,9 @@
+import torch
 from torch import nn
+
+# Đặt seed toàn cục
+seed = 42
+torch.manual_seed(seed)
 
 class EmotionDetectModule(nn.Module):
     def __init__(self):
@@ -8,7 +13,6 @@ class EmotionDetectModule(nn.Module):
             nn.BatchNorm2d(512),
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(512, out_neurons),
         )
 

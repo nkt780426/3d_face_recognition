@@ -1,5 +1,10 @@
 from torch.optim.lr_scheduler import _LRScheduler
 import warnings
+import torch
+
+# Đặt seed toàn cục
+seed = 42
+torch.manual_seed(seed)
 
 class PolynomialLRWarmup(_LRScheduler):
     def __init__(self, optimizer, warmup_iters, total_iters=5, power=1.0, last_epoch=-1, verbose=False):

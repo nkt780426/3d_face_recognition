@@ -2,6 +2,10 @@ import torch
 import torch.nn.functional as F
 import pandas as pd
 
+# Đặt seed toàn cục
+seed = 42
+torch.manual_seed(seed)
+
 class FocalLoss(torch.nn.Module):
     
     def __init__(self, file_path, label_name, gamma_weights=None):
@@ -31,14 +35,19 @@ class FocalLoss(torch.nn.Module):
         # Tính tần suất ngược
         alpha = 1 - (label_counts.values / total_samples)
         
-        # Chuẩn hóa alpha về khoảng [0, 1]
-        alpha = (alpha - alpha.min()) / (alpha.max() - alpha.min() + 1e-8)
+        # Tổng chuẩn hóa alpha (đảm bảo tổng alpha = 1)
+        alpha_sum = alpha.sum()
+        alpha = alpha / alpha_sum
         
-        # Giới hạn alpha trong khoảng [0.2, 0.8]
-        min_alpha, max_alpha = 0.2, 0.8
-        alpha = alpha * (max_alpha - min_alpha) + min_alpha
-        
-        # Chuyển alpha thành tensor
+        # Kiểm tra và điều chỉnh alpha theo điều kiện
+        max_alpha = alpha.max()
+        if max_alpha < 0.2:
+            alpha *= 5
+        elif max_alpha < 0.3:
+            alpha *= 3
+        elif max_alpha < 0.5:
+            alpha *= 2
+            
         return torch.tensor(alpha, dtype=torch.float32)
 
 
