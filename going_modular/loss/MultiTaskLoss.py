@@ -2,6 +2,7 @@ import torch
 
 from .focalloss.IdFocalLoss import IdFocalLoss
 from .focalloss.FocalLoss import FocalLoss
+from .MagLoss import MagLoss
 
 # Đặt seed toàn cục
 seed = 42
