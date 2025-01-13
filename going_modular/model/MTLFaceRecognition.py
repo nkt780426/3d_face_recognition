@@ -87,7 +87,8 @@ class MTLFaceRecognition(torch.nn.Module):
                 )
         return logits
     
-    def get_id_embedding(self, x):
+    
+    def get_embedding(self, x):
         (
             (x_spectacles, x_non_spectacles),
             (x_occlusion, x_non_occlusion),
@@ -97,76 +98,10 @@ class MTLFaceRecognition(torch.nn.Module):
             (x_gender, x_id)
         ) = self.backbone(x)
         x_id = self.id_head.id_ouput_layer(x_id)
-        return x_id
-        
-    def get_gender_embedding(self, x):
-        (
-            (x_spectacles, x_non_spectacles),
-            (x_occlusion, x_non_occlusion),
-            (x_facial_hair, x_non_facial_hair),
-            (x_emotion, x_non_emotion),
-            (x_pose, x_non_pose),
-            (x_gender, x_id)
-        ) = self.backbone(x)
-        x_gender = self.gender_head.gender_ouput_layer(x_gender)
-        return x_gender
-        
-    def get_pose_embedding(self, x):
-        (
-            (x_spectacles, x_non_spectacles),
-            (x_occlusion, x_non_occlusion),
-            (x_facial_hair, x_non_facial_hair),
-            (x_emotion, x_non_emotion),
-            (x_pose, x_non_pose),
-            (x_gender, x_id)
-        ) = self.backbone(x)
+        x_gender = self.gender_head.gender_output_layer(x_gender)
         x_pose = self.pose_head.pose_ouput_layer(x_pose)
-        return x_pose
-        
-    def get_emotion_embedding(self, x):
-        (
-            (x_spectacles, x_non_spectacles),
-            (x_occlusion, x_non_occlusion),
-            (x_facial_hair, x_non_facial_hair),
-            (x_emotion, x_non_emotion),
-            (x_pose, x_non_pose),
-            (x_gender, x_id)
-        ) = self.backbone(x)
         x_emotion = self.emotion_head.emotion_ouput_layer(x_emotion)
-        return x_emotion
-    
-    def get_facial_hair_embedding(self, x):
-        (
-            (x_spectacles, x_non_spectacles),
-            (x_occlusion, x_non_occlusion),
-            (x_facial_hair, x_non_facial_hair),
-            (x_emotion, x_non_emotion),
-            (x_pose, x_non_pose),
-            (x_gender, x_id)
-        ) = self.backbone(x)
         x_facial_hair = self.facial_hair_head.facial_hair_ouput_layer(x_facial_hair)
-        return x_facial_hair
-        
-    def get_occlusion_embedding(self, x):
-        (
-            (x_spectacles, x_non_spectacles),
-            (x_occlusion, x_non_occlusion),
-            (x_facial_hair, x_non_facial_hair),
-            (x_emotion, x_non_emotion),
-            (x_pose, x_non_pose),
-            (x_gender, x_id)
-        ) = self.backbone(x)
         x_occlusion = self.occlusion_head.occlusion_ouput_layer(x_occlusion)
-        return x_occlusion
-        
-    def get_spectacles_embedding(self, x):
-        (
-            (x_spectacles, x_non_spectacles),
-            (x_occlusion, x_non_occlusion),
-            (x_facial_hair, x_non_facial_hair),
-            (x_emotion, x_non_emotion),
-            (x_pose, x_non_pose),
-            (x_gender, x_id)
-        ) = self.backbone(x)
         x_spectacles = self.spectacles_head.spectacle_ouput_layer(x_spectacles)
-        return x_spectacles
+        return x_id, x_gender, x_pose, x_emotion, x_facial_hair, x_occlusion, x_spectacles

@@ -1,30 +1,65 @@
 import torch
 import numpy as np
-from sklearn.metrics import roc_curve, auc, accuracy_score
-import time
+from sklearn.metrics import roc_curve, auc, accuracy_score, roc_auc_score
 
 # Đặt seed toàn cục
 seed = 42
 torch.manual_seed(seed)
 
-def compute_roc_auc(
+def compute_auc(
     dataloader: torch.utils.data.DataLoader, 
     model: torch.nn.Module, 
     device: str
 ):
     
     model.eval()
+    all_labels = {'gender': [], 'spectacles': [], 'facial_hair': [], 'pose': [], 'occlusion': [], 'emotion': [] }
+    all_preds = {'gender': [], 'spectacles': [], 'facial_hair': [], 'pose': [], 'occlusion': [], 'emotion': [] }
+
     with torch.no_grad():
         embeddings_list = []
+
         for batch in dataloader:
             images, y = batch
-            ids = y[:, 0]
-            images = images.to(device)
-            embeddings = model.get_id_embedding(images)
+            # Lấy các nhãn thực tế từ y
+            id, gender, spectacles, facial_hair, pose, occlusion, emotion = (
+                y[:, 0], y[:, 1], y[:, 2], y[:, 3], y[:, 4], y[:, 5], y[:, 6]
+            )
             
-            embeddings_list.append((ids, embeddings))
-        
-        # Concatenate all embeddings into one tensor
+            images = images.to(device)
+            # Trừ id, còn lại đều đã qua softmax
+            x_id, x_gender, x_pose, x_emotion, x_facial_hair, x_occlusion, x_spectacles = model.get_embedding(images)
+
+            # Append IDs and embeddings
+            embeddings_list.append((id, x_id))
+
+            # Tính xác suất và lớp dự đoán cho mỗi thuộc tính (gender, spectacles, facial_hair, pose, occlusion, emotion)
+            for attribute, x_attr, y_attr in zip(
+                ['gender', 'spectacles', 'facial_hair', 'pose', 'occlusion', 'emotion'],
+                [torch.softmax(x_gender, dim=1), torch.softmax(x_spectacles, dim=1), torch.softmax(x_facial_hair, dim=1), 
+                torch.softmax(x_pose, dim=1), torch.softmax(x_occlusion, dim=1), torch.softmax(x_emotion, dim=1)],
+                [gender, spectacles, facial_hair, pose, occlusion, emotion]
+            ):
+                # Tìm xác suất lớn nhất và lớp của nó
+                probs, predicted_classes = torch.max(x_attr, dim=1)
+
+                # Đảm bảo y_attr cùng device với predicted_classes
+                y_attr = y_attr.to(predicted_classes.device)
+
+                # Cập nhật all_labels với việc so sánh lớp dự đoán với nhãn thực tế
+                all_labels[attribute].append((predicted_classes == y_attr).int().cpu().numpy())
+
+                # Lấy xác suất cho lớp dự đoán đúng từ x_attr
+                all_preds[attribute].append(torch.gather(x_attr, 1, y_attr.unsqueeze(1).long()).squeeze(1).cpu().numpy())
+
+        # Chuyển thành mảng 1 chiều cho tất cả các lớp
+        for attribute in all_labels:
+            all_labels[attribute] = np.concatenate(all_labels[attribute], axis=0)
+        for attribute in all_preds:
+            all_preds[attribute] = np.concatenate(all_preds[attribute], axis=0)
+
+
+        # Concatenate all id embeddings into one tensor
         all_ids = torch.cat([x[0] for x in embeddings_list], dim=0)
         all_embeddings = torch.cat([x[1] for x in embeddings_list], dim=0)
         
@@ -49,27 +84,16 @@ def compute_roc_auc(
         cosine_labels = labels[torch.triu(torch.ones_like(labels), diagonal=1) == 1].cpu().numpy()
         
         # Compute ROC AUC for Euclidean distance
-        euclidean_true_labels = 1 - np.array(euclidean_labels)
-        euclidean_pred_scores = np.array(euclidean_scores)
-        fpr_euclidean, tpr_euclidean, _ = roc_curve(euclidean_true_labels, euclidean_pred_scores)
-        roc_auc_euclidean = auc(fpr_euclidean, tpr_euclidean)
+        all_labels['id_euclidean'] = 1 - np.array(euclidean_labels)
+        all_preds['id_euclidean'] = np.array(euclidean_scores)
 
         # Compute ROC AUC for Cosine similarity
-        cosine_true_labels = np.array(cosine_labels)
-        cosine_pred_scores = np.array(cosine_scores)
-        fpr_cosine, tpr_cosine, _ = roc_curve(cosine_true_labels, cosine_pred_scores)
-        roc_auc_cosine = auc(fpr_cosine, tpr_cosine)
+        all_labels['id_cosine'] = np.array(cosine_labels)
+        all_preds['id_cosine'] = np.array(cosine_scores)
         
-        # # Calculate accuracy for Euclidean distance
-        # euclidean_optimal_idx = np.argmax(tpr_euclidean - fpr_euclidean) # Chọn ngưỡng tại điểm có giá trị tpr - fpr lớn nhất trên đường ROC, vì đây là nơi tối ưu hóa sự cân bằng giữa tỷ lệ phát hiện (TPR) và tỷ lệ báo động giả (FPR).
-        # euclidean_optimal_threshold = thresholds_euclidean[euclidean_optimal_idx]
-        # euclidean_pred_labels = (euclidean_pred_scores >= euclidean_optimal_threshold).astype(int)
-        # euclidean_accuracy = accuracy_score(euclidean_true_labels, euclidean_pred_labels)
-
-        # # Calculate accuracy for Cosine similarity
-        # cosine_optimal_idx = np.argmax(tpr_cosine - fpr_cosine)
-        # cosine_optimal_threshold = thresholds_cosine[cosine_optimal_idx]
-        # cosine_pred_labels = (cosine_pred_scores >= cosine_optimal_threshold).astype(int)
-        # cosine_accuracy = accuracy_score(cosine_true_labels, cosine_pred_labels)
+        # Tính AUC cho từng tác vụ
+        auc_scores = {}
+        for task in all_labels:
+            auc_scores[task] = roc_auc_score(all_labels[task], all_preds[task])
         
-    return roc_auc_euclidean, roc_auc_cosine
+        return auc_scores
