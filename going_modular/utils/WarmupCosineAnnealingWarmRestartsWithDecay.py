@@ -29,7 +29,9 @@ class WarmupCosineAnnealingWarmRestartsWithDecay(_LRScheduler):
             # Update learning rates after each restart
             restart_epoch = epoch - self.warmup_iters
             if restart_epoch == 0 or restart_epoch % self.cosine_scheduler.T_0 == 0:
-                self.current_base_lrs = [lr * self.decay_factor for lr in self.current_base_lrs]
+                self.current_base_lrs = [
+                    max(lr * self.decay_factor, self.eta_min + self.min_delta) for lr in self.current_base_lrs
+                ]
                 for i, param_group in enumerate(self.optimizer.param_groups):
                     param_group['lr'] = self.current_base_lrs[i]
 
