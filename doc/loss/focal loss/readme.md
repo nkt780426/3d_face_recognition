@@ -38,6 +38,3 @@ FR đề xuất thêm 1 hệ số điều chỉnh FL(pt)=-(1-pt)^gamma và công
         𝛾 kiểm soát mức độ giảm ảnh hưởng của các mẫu dễ.
         Khi 𝛾=0, Focal Loss giống Cross Entropy.
         Khi 𝛾 tăng, hiệu ứng giảm trọng số của các mẫu dễ cũng tăng.
-
-
-# Dùng thế nào.

@@ -17,9 +17,10 @@ def compute_roc_auc(
     with torch.no_grad():
         embeddings_list = []
         for batch in dataloader:
-            images, ids = batch
+            images, y = batch
+            ids = y[:, 0]
             images = images.to(device)
-            embeddings = model.get_embedding(images)
+            embeddings = model.get_id_embedding(images)
             
             embeddings_list.append((ids, embeddings))
         

@@ -6,12 +6,12 @@ seed = 42
 torch.manual_seed(seed)
 
 class MagLoss(torch.nn.Module):
-    def __init__(self, conf):
+    def __init__(self, l_a, u_a, scale, lambda_g):
         super(MagLoss, self).__init__()
-        self.l_a = conf['l_a']
-        self.u_a = conf['u_a']
-        self.scale = conf['scale']
-        self.lambda_g = conf['lambda_g']
+        self.l_a = l_a
+        self.u_a = u_a
+        self.scale = scale
+        self.lambda_g = lambda_g
 
     def calc_loss_G(self, x_norm):
         g = 1/(self.u_a**2) * x_norm + 1/(x_norm)
