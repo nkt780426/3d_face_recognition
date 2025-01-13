@@ -119,7 +119,7 @@ def fit(
         # if early_max_stopping.early_stop and early_min_stopping.early_stop:
         #     break
         
-        scheduler.step()
+        scheduler.step(epoch)
         
     writer.close()
  
