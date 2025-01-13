@@ -8,6 +8,7 @@ class WarmupCosineAnnealingWarmRestartsWithDecay(_LRScheduler):
         self.T_mult = T_mult
         self.eta_min = eta_min
         self.decay_factor = decay_factor
+        self.min_delta = 1e-6
 
         # Store the original base learning rates
         self.base_lrs = [group['lr'] for group in optimizer.param_groups]
