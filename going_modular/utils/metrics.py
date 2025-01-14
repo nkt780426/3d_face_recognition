@@ -1,40 +1,41 @@
-class AverageMeter(object):
+from tabulate import tabulate
 
-    def __init__(self, name, fmt=':f'):
-        self.name = name
-        self.fmt = fmt
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.total_samples = 0
-        self.avg = 0
-
-    # val: giá trị accuracy, loss trong 1 batch train, n là batch_size
-    def update(self, val, batch_size):
-        self.val += val
-        self.total_samples += batch_size
-
-    def compute(self):
-        self.avg = self.val / self.total_samples
-    
-    # format kết quả train
-    def __str__(self):
-        fmtstr = '{name} {avg' + self.fmt + '}'
-        return fmtstr.format(**self.__dict__)
-
-# Hiển thị các thông tin trong quá trình training. Kết hợp với tham số AverageMeter ở trên.
 class ProgressMeter(object):
-    def __init__(self, train_meters, test_meters, prefix=""):
-        self.train_meters = train_meters
-        self.test_meters = test_meters
+    def __init__(self, train_metrics, test_metrics, prefix=""):
+        """
+        Hiển thị tiến trình training với các giá trị train và test.
+
+        Args:
+            train_metrics (dict): Từ điển chứa tên tham số và giá trị của train.
+            test_metrics (dict): Từ điển chứa tên tham số và giá trị của test.
+            prefix (str): Tiêu đề hoặc tiền tố cho mỗi epoch.
+        """
+        self.train_metrics = train_metrics
+        self.test_metrics = test_metrics
         self.prefix = prefix
 
+    
     def display(self):
-        print(f"{self.prefix}")
-        
-        train_metrics = " | ".join(str(meter) for meter in self.train_meters)
-        print(f"\ttrain: {train_metrics}")
+        print(self.prefix)
 
-        val_metrics = " | ".join(str(meter) for meter in self.test_meters)
-        print(f"\ttest: {val_metrics}")
+        # Tạo danh sách các metrics và sắp xếp theo thứ tự loss in trước auc in sau
+        loss_metrics = [
+            "loss", "loss_id", "loss_gender", "loss_da_gender", "loss_emotion", "loss_da_emotion",
+            "loss_pose", "loss_da_pose", "loss_facial_hair", "loss_da_facial_hair",
+            "loss_occlusion", "loss_da_occlusion", "loss_spectacles", "loss_da_spectacles"
+        ]
+        auc_metrics = [
+            "auc_gender", "auc_spectacles", "auc_facial_hair", "auc_pose", "auc_occlusion",
+            "auc_emotion", "auc_id_cosine", "auc_id_euclidean"
+        ]
+
+        # Tạo bảng hiển thị từ các metric
+        headers = ["Metric", "Train", "Test"]
+        rows = []
+
+        # Sắp xếp các metrics theo order loss trước auc
+        for metric in loss_metrics + auc_metrics:
+            rows.append([metric, self.train_metrics.get(metric, "-"), self.test_metrics.get(metric, "-")])
+
+        # Sử dụng tabulate để tạo bảng
+        print(tabulate(rows, headers=headers, tablefmt="fancy_grid"))

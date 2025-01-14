@@ -89,5 +89,20 @@ class MultiTaskLoss(torch.nn.Module):
                         loss_spectacles * self.spectacles_weight + \
                         loss_da_spectacles * self.da_spectacles_weight
         
-        return total_loss
+        return (
+            total_loss,
+            loss_id,
+            loss_gender,
+            loss_da_gender,
+            loss_emotion,
+            loss_da_emotion,
+            loss_pose,
+            loss_da_pose,
+            loss_facial_hair,
+            loss_da_facial_hair,
+            loss_occlusion,
+            loss_da_occlusion,
+            loss_spectacles,
+            loss_da_spectacles
+        )
     

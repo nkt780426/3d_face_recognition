@@ -33,7 +33,37 @@ def fit(
     
     for epoch in range(start_epoch, conf['epochs']):
         
-        train_loss = train_epoch(train_dataloader, model, criterion, optimizer, device)
+        (   
+            train_loss,
+            train_loss_id,
+            train_loss_gender,
+            train_loss_da_gender,
+            train_loss_emotion,
+            train_loss_da_emotion,
+            train_loss_pose,
+            train_loss_da_pose,
+            train_loss_facial_hair,
+            train_loss_da_facial_hair,
+            train_loss_occlusion,
+            train_loss_da_occlusion,
+            train_loss_spectacles,
+            train_loss_da_spectacles
+        ) = train_epoch(train_dataloader, model, criterion, optimizer, device)
+        
+        (   
+            test_loss_gender,
+            test_loss_da_gender,
+            test_loss_emotion,
+            test_loss_da_emotion,
+            test_loss_pose,
+            test_loss_da_pose,
+            test_loss_facial_hair,
+            test_loss_da_facial_hair,
+            test_loss_occlusion,
+            test_loss_da_occlusion,
+            test_loss_spectacles,
+            test_loss_da_spectacles
+        ) = test_epoch(test_dataloader, model, criterion, device)
         
         train_auc = compute_auc(train_dataloader, model, device)
         train_gender_auc = train_auc['gender']
@@ -57,6 +87,42 @@ def fit(
         
         # Log các giá trị vào TensorBoard
         writer.add_scalar('Loss/train', train_loss, epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/gender', tag_scalar_dict={
+            'train': train_loss_gender, 'test': test_loss_gender}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/da_gender', tag_scalar_dict={
+            'train': train_loss_da_gender, 'test': test_loss_da_gender}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/spectacles', tag_scalar_dict={
+            'train': train_loss_spectacles, 'test': test_loss_spectacles}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/da_spectacles', tag_scalar_dict={
+            'train': train_loss_da_spectacles, 'test': test_loss_da_spectacles}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/facial_hair', tag_scalar_dict={
+            'train': train_loss_facial_hair, 'test': test_loss_facial_hair}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/da_facial_hair', tag_scalar_dict={
+            'train': train_loss_da_facial_hair, 'test': test_loss_da_facial_hair}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/pose', tag_scalar_dict={
+            'train': train_loss_pose, 'test': test_loss_pose}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/da_pose', tag_scalar_dict={
+            'train': train_loss_da_pose, 'test': test_loss_da_pose}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/occlusion', tag_scalar_dict={
+            'train': train_loss_occlusion, 'test': test_loss_occlusion}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/da_occlution', tag_scalar_dict={
+            'train': train_loss_da_occlusion, 'test': test_loss_da_occlusion}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/emotion', tag_scalar_dict={
+            'train': train_loss_emotion, 'test': test_loss_emotion}, global_step=epoch+1)
+        
+        writer.add_scalars(main_tag='Loss/da_emotion', tag_scalar_dict={
+            'train': train_loss_da_emotion, 'test': test_loss_da_emotion}, global_step=epoch+1)
         
         writer.add_scalars(main_tag='Cosine_auc', tag_scalar_dict={
             'train': train_id_cosine_auc, 'test': test_id_cosine_auc}, global_step=epoch+1)
@@ -82,32 +148,58 @@ def fit(
         writer.add_scalars(main_tag='Emotion_auc', tag_scalar_dict={
             'train': train_emotion_auc, 'test': test_emotion_auc}, global_step=epoch+1)
         
-        train_metrics = [
-            f"loss: {train_loss:.4f}", 
-            f"auc_cos: {train_id_cosine_auc:.4f}",
-            f"auc_eu: {train_id_euclidean_auc:.4f}",
-            f"auc_gender: {train_gender_auc:.4f}",
-            f"auc_spectacles: {train_spectacles_auc:.4f}",
-            f"auc_facial_hair: {train_facial_hair_auc:.4f}",
-            f"auc_pose: {train_pose_auc:.4f}",
-            f"auc_occlusion: {train_occlusion_auc:.4f}",
-            f"auc_emotion: {train_emotion_auc:.4f}"
-        ]
+        train_metrics = {
+            "loss": train_loss,
+            "loss_id": train_loss_id,
+            "loss_gender": train_loss_gender,
+            "loss_da_gender": train_loss_da_gender,
+            "loss_emotion": train_loss_emotion,
+            "loss_da_emotion": train_loss_da_emotion,
+            "loss_pose": train_loss_pose,
+            "loss_da_pose": train_loss_da_pose,
+            "loss_facial_hair": train_loss_facial_hair,
+            "loss_da_facial_hair": train_loss_da_facial_hair,
+            "loss_occlusion": train_loss_occlusion,
+            "loss_da_occlusion": train_loss_da_occlusion,
+            "loss_spectacles": train_loss_spectacles,
+            "loss_da_spectacles": train_loss_da_spectacles,
+            "auc_gender": train_gender_auc,
+            "auc_spectacles": train_spectacles_auc,
+            "auc_facial_hair": train_facial_hair_auc,
+            "auc_pose": train_pose_auc,
+            "auc_occlusion": train_occlusion_auc,
+            "auc_emotion": train_emotion_auc,
+            "auc_id_cosine": train_id_cosine_auc,
+            "auc_id_euclidean": train_id_euclidean_auc,
+        }
 
-        test_metrics = [
-            f"auc_cos: {test_id_cosine_auc:.4f}",
-            f"auc_eu: {test_id_euclidean_auc:.4f}",
-            f"auc_gender: {test_gender_auc:.4f}",
-            f"auc_spectacles: {test_spectacles_auc:.4f}",
-            f"auc_facial_hair: {test_facial_hair_auc:.4f}",
-            f"auc_pose: {test_pose_auc:.4f}",
-            f"auc_occlusion: {test_occlusion_auc:.4f}",
-            f"auc_emotion: {test_emotion_auc:.4f}"
-        ]
+        test_metrics = {
+            "loss_gender": test_loss_gender,
+            "loss_da_gender": test_loss_da_gender,
+            "loss_emotion": test_loss_emotion,
+            "loss_da_emotion": test_loss_da_emotion,
+            "loss_pose": test_loss_pose,
+            "loss_da_pose": test_loss_da_pose,
+            "loss_facial_hair": test_loss_facial_hair,
+            "loss_da_facial_hair": test_loss_da_facial_hair,
+            "loss_occlusion": test_loss_occlusion,
+            "loss_da_occlusion": test_loss_da_occlusion,
+            "loss_spectacles": test_loss_spectacles,
+            "loss_da_spectacles": test_loss_da_spectacles,
+            "auc_gender": test_gender_auc,
+            "auc_spectacles": test_spectacles_auc,
+            "auc_facial_hair": test_facial_hair_auc,
+            "auc_pose": test_pose_auc,
+            "auc_occlusion": test_occlusion_auc,
+            "auc_emotion": test_emotion_auc,
+            "auc_id_cosine": test_id_cosine_auc,
+            "auc_id_euclidean": test_id_euclidean_auc,
+        }
+
 
         process = ProgressMeter(
-            train_meters=train_metrics,
-            test_meters=test_metrics,
+            train_metrics=train_metrics,
+            test_metrics=test_metrics,
             prefix=f"Epoch {epoch + 1}:"
         )
 
@@ -130,29 +222,182 @@ def train_epoch(
     criterion: Module, 
     optimizer: Optimizer, 
     device: str,
-    ):
-    
+):
     model.to(device)
     model.train()
-    
+
     train_loss = 0
-    
+
+    # Các biến lưu trữ tổng loss từng loại
+    total_loss_id = 0
+    total_loss_gender = 0
+    total_loss_da_gender = 0
+    total_loss_emotion = 0
+    total_loss_da_emotion = 0
+    total_loss_pose = 0
+    total_loss_da_pose = 0
+    total_loss_facial_hair = 0
+    total_loss_da_facial_hair = 0
+    total_loss_occlusion = 0
+    total_loss_da_occlusion = 0
+    total_loss_spectacles = 0
+    total_loss_da_spectacles = 0
+
     for X, y in train_dataloader:
         X = X.to(device)
         y = y.to(device)
-        
+
         optimizer.zero_grad()
 
         logits = model(X)
-            
-        loss = criterion(logits, y)
 
-        loss.backward()
+        (
+            total_loss, 
+            loss_id, loss_gender, loss_da_gender, 
+            loss_emotion, loss_da_emotion, 
+            loss_pose, loss_da_pose, 
+            loss_facial_hair, loss_da_facial_hair, 
+            loss_occlusion, loss_da_occlusion, 
+            loss_spectacles, loss_da_spectacles
+        ) = criterion(logits, y)
 
+        total_loss.backward()
         optimizer.step()
-            
-        train_loss += loss.item()
-            
-    train_loss /=len(train_dataloader)
+
+        train_loss += total_loss.item()
+
+        # Cộng dồn các giá trị loss riêng biệt
+        total_loss_id += loss_id.item()
+        total_loss_gender += loss_gender.item()
+        total_loss_da_gender += loss_da_gender.item()
+        total_loss_emotion += loss_emotion.item()
+        total_loss_da_emotion += loss_da_emotion.item()
+        total_loss_pose += loss_pose.item()
+        total_loss_da_pose += loss_da_pose.item()
+        total_loss_facial_hair += loss_facial_hair.item()
+        total_loss_da_facial_hair += loss_da_facial_hair.item()
+        total_loss_occlusion += loss_occlusion.item()
+        total_loss_da_occlusion += loss_da_occlusion.item()
+        total_loss_spectacles += loss_spectacles.item()
+        total_loss_da_spectacles += loss_da_spectacles.item()
+
+    # Tính trung bình của từng loại loss
+    num_batches = len(train_dataloader)
+    avg_train_loss = train_loss / num_batches
+    avg_loss_id = total_loss_id / num_batches
+    avg_loss_gender = total_loss_gender / num_batches
+    avg_loss_da_gender = total_loss_da_gender / num_batches
+    avg_loss_emotion = total_loss_emotion / num_batches
+    avg_loss_da_emotion = total_loss_da_emotion / num_batches
+    avg_loss_pose = total_loss_pose / num_batches
+    avg_loss_da_pose = total_loss_da_pose / num_batches
+    avg_loss_facial_hair = total_loss_facial_hair / num_batches
+    avg_loss_da_facial_hair = total_loss_da_facial_hair / num_batches
+    avg_loss_occlusion = total_loss_occlusion / num_batches
+    avg_loss_da_occlusion = total_loss_da_occlusion / num_batches
+    avg_loss_spectacles = total_loss_spectacles / num_batches
+    avg_loss_da_spectacles = total_loss_da_spectacles / num_batches
     
-    return train_loss
+    return (
+        avg_train_loss,
+        avg_loss_id,
+        avg_loss_gender,
+        avg_loss_da_gender,
+        avg_loss_emotion,
+        avg_loss_da_emotion,
+        avg_loss_pose,
+        avg_loss_da_pose,
+        avg_loss_facial_hair,
+        avg_loss_da_facial_hair,
+        avg_loss_occlusion,
+        avg_loss_da_occlusion,
+        avg_loss_spectacles,
+        avg_loss_da_spectacles,
+    )
+
+
+def test_epoch(
+    test_dataloader: DataLoader, 
+    model: Module, 
+    criterion: Module, 
+    device: str,
+):
+    model.to(device)
+    model.eval()
+
+    # Các biến lưu trữ tổng loss từng loại
+    total_loss_gender = 0
+    total_loss_da_gender = 0
+    total_loss_emotion = 0
+    total_loss_da_emotion = 0
+    total_loss_pose = 0
+    total_loss_da_pose = 0
+    total_loss_facial_hair = 0
+    total_loss_da_facial_hair = 0
+    total_loss_occlusion = 0
+    total_loss_da_occlusion = 0
+    total_loss_spectacles = 0
+    total_loss_da_spectacles = 0
+
+    with torch.no_grad():
+        for X, y in test_dataloader:
+            X = X.to(device)
+            y = y.to(device)
+
+            logits = model(X)
+
+            (
+                total_loss, 
+                loss_id, loss_gender, loss_da_gender, 
+                loss_emotion, loss_da_emotion, 
+                loss_pose, loss_da_pose, 
+                loss_facial_hair, loss_da_facial_hair, 
+                loss_occlusion, loss_da_occlusion, 
+                loss_spectacles, loss_da_spectacles
+            ) = criterion(logits, y)
+
+
+            # Cộng dồn các giá trị loss riêng biệt
+            total_loss_gender += loss_gender.item()
+            total_loss_da_gender += loss_da_gender.item()
+            total_loss_emotion += loss_emotion.item()
+            total_loss_da_emotion += loss_da_emotion.item()
+            total_loss_pose += loss_pose.item()
+            total_loss_da_pose += loss_da_pose.item()
+            total_loss_facial_hair += loss_facial_hair.item()
+            total_loss_da_facial_hair += loss_da_facial_hair.item()
+            total_loss_occlusion += loss_occlusion.item()
+            total_loss_da_occlusion += loss_da_occlusion.item()
+            total_loss_spectacles += loss_spectacles.item()
+            total_loss_da_spectacles += loss_da_spectacles.item()
+
+    # Tính trung bình của từng loại loss
+    num_batches = len(test_dataloader)
+    avg_loss_gender = total_loss_gender / num_batches
+    avg_loss_da_gender = total_loss_da_gender / num_batches
+    avg_loss_emotion = total_loss_emotion / num_batches
+    avg_loss_da_emotion = total_loss_da_emotion / num_batches
+    avg_loss_pose = total_loss_pose / num_batches
+    avg_loss_da_pose = total_loss_da_pose / num_batches
+    avg_loss_facial_hair = total_loss_facial_hair / num_batches
+    avg_loss_da_facial_hair = total_loss_da_facial_hair / num_batches
+    avg_loss_occlusion = total_loss_occlusion / num_batches
+    avg_loss_da_occlusion = total_loss_da_occlusion / num_batches
+    avg_loss_spectacles = total_loss_spectacles / num_batches
+    avg_loss_da_spectacles = total_loss_da_spectacles / num_batches
+
+    # Trả về tất cả các loss dưới dạng tuple
+    return (
+        avg_loss_gender,
+        avg_loss_da_gender,
+        avg_loss_emotion,
+        avg_loss_da_emotion,
+        avg_loss_pose,
+        avg_loss_da_pose,
+        avg_loss_facial_hair,
+        avg_loss_da_facial_hair,
+        avg_loss_occlusion,
+        avg_loss_da_occlusion,
+        avg_loss_spectacles,
+        avg_loss_da_spectacles,
+    )

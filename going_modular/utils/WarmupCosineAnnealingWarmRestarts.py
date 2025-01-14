@@ -1,13 +1,12 @@
 from torch.optim.lr_scheduler import _LRScheduler, CosineAnnealingWarmRestarts, LambdaLR
 
-class WarmupCosineAnnealingWarmRestartsWithDecay(_LRScheduler):
-    def __init__(self, optimizer, warmup_iters, T_0, T_mult=2, eta_min=0, decay_factor=0.5):
+class WarmupCosineAnnealingWarmRestarts(_LRScheduler):
+    def __init__(self, optimizer, warmup_iters, T_0, T_mult=2, eta_min=0):
         self.optimizer = optimizer
         self.warmup_iters = warmup_iters
         self.T_0 = T_0
         self.T_mult = T_mult
         self.eta_min = eta_min
-        self.decay_factor = decay_factor
         self.min_delta = 1e-6
 
         # Store the original base learning rates
@@ -27,15 +26,6 @@ class WarmupCosineAnnealingWarmRestartsWithDecay(_LRScheduler):
         if epoch < self.warmup_iters:
             self.warmup_scheduler.step()
         else:
-            # Update learning rates after each restart
-            restart_epoch = epoch - self.warmup_iters
-            if restart_epoch == 0 or restart_epoch % self.cosine_scheduler.T_0 == 0:
-                self.current_base_lrs = [
-                    max(lr * self.decay_factor, self.eta_min + self.min_delta) for lr in self.current_base_lrs
-                ]
-                for i, param_group in enumerate(self.optimizer.param_groups):
-                    param_group['lr'] = self.current_base_lrs[i]
-
             self.cosine_scheduler.step(epoch - self.warmup_iters)
 
     def get_last_lr(self):
